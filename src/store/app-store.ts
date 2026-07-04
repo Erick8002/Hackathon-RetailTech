@@ -9,7 +9,15 @@ import {
 } from "@/lib/seed-data";
 
 export type CartItem = { productId: string; qty: number };
-export type PaymentMethod = "dinheiro" | "pix" | "cartao" | "caderneta";
+export type PaymentMethod = "dinheiro" | "pix" | "cartao_credito" | "cartao_debito" | "caderneta";
+
+// Detalhamento de vendas por tipo de pagamento
+export type PaymentBreakdown = {
+  dinheiro: number;
+  pix: number;
+  cartao_credito: number;
+  cartao_debito: number;
+};
 
 type User = {
   email: string;
@@ -26,6 +34,7 @@ type State = {
 
   cashToday: number;
   salesCount: number;
+  paymentBreakdown: PaymentBreakdown; // Novo: rastreamento de vendas por tipo
 
   cart: CartItem[];
   selectedClientId: string | null;
@@ -95,6 +104,12 @@ export const useApp = create<State>((set, get) => {
     clients: seedClients,
     cashToday: seedCashToday,
     salesCount: 12,
+    paymentBreakdown: {
+      dinheiro: 0,
+      pix: 0,
+      cartao_credito: 0,
+      cartao_debito: 0,
+    },
     cart: [],
     selectedClientId: null,
     cadernetaUnlocked: false,
@@ -232,6 +247,13 @@ export const useApp = create<State>((set, get) => {
         salesCount: get().salesCount + 1,
       });
 
+      // Atualizar breakdown de pagamentos
+      const breakdown = { ...get().paymentBreakdown };
+      if (method === "dinheiro") breakdown.dinheiro += total;
+      else if (method === "pix") breakdown.pix += total;
+      else if (method === "cartao_credito") breakdown.cartao_credito += total;
+      else if (method === "cartao_debito") breakdown.cartao_debito += total;
+
       if (method === "caderneta" && clientId) {
         set({
           clients: get().clients.map((c) => {
@@ -251,7 +273,10 @@ export const useApp = create<State>((set, get) => {
           }),
         });
       } else {
-        set({ cashToday: get().cashToday + total });
+        set({ 
+          cashToday: get().cashToday + total,
+          paymentBreakdown: breakdown, // Atualizar breakdown
+        });
         if (clientId) {
           set({
             clients: get().clients.map((c) =>

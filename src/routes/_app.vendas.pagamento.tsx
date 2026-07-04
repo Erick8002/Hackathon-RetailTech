@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Banknote, BookOpen, CreditCard, Lock, Smartphone } from "lucide-react";
+import { Banknote, BookOpen, CreditCard, Lock, Smartphone, ChevronLeft } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/ledger/PageHeader";
@@ -41,6 +42,9 @@ function Pagamento() {
   const cadernetaUnlocked = useApp((s) => s.cadernetaUnlocked);
   const navigate = useNavigate();
 
+  // Estado para controlar seleção de tipo de cartão
+  const [showCardTypeSelector, setShowCardTypeSelector] = useState(false);
+
   const client = clients.find((c) => c.id === selectedId);
   const clientScore = client ? scoreFor(client) : null;
 
@@ -75,6 +79,11 @@ function Pagamento() {
     navigate({ to: "/" });
   };
 
+  // ✅ FUNÇÃO PARA PROCESSAMENTO DE CARTÃO
+  const handleCardClick = () => {
+    setShowCardTypeSelector(true);
+  };
+
   // ✅ BOTÕES: Com informações sobre bloqueio
   const buttons: {
     method: PaymentMethod;
@@ -83,6 +92,7 @@ function Pagamento() {
     color: string;
     disabled?: boolean;
     blockedReason?: string;
+    isCard?: boolean; // Novo: identifica botão de cartão
   }[] = [
     { 
       method: "dinheiro", 
@@ -97,10 +107,11 @@ function Pagamento() {
       color: "bg-ledger-blue" 
     },
     { 
-      method: "cartao", 
+      method: "cartao_credito", // Temporário - será substituído pelo seletor
       label: "Cartão", 
       icon: CreditCard, 
-      color: "bg-ink" 
+      color: "bg-ink",
+      isCard: true, // Novo: marca como botão de cartão
     },
     {
       method: "caderneta",
@@ -186,31 +197,67 @@ function Pagamento() {
         })}
       </div>
 
-      <div className="animate-entry space-y-3 [animation-delay:160ms]">
-        {buttons.map(({ method, label, icon: Icon, color, disabled, blockedReason }) => (
-          <div key={method}>
-            <button
-              onClick={() => pay(method)}
-              disabled={disabled}
-              className={`flex h-16 w-full items-center justify-between rounded-2xl px-6 font-black uppercase tracking-tight text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink/40 ${color}`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon className="size-6" strokeWidth={2.5} />
-                <span>{label}</span>
-              </span>
-              {disabled && method === "caderneta" && (
-                <Lock className="size-5" />
+      {/* RENDERIZAÇÃO CONDICIONAL: Mostrar seletor de tipo de cartão ou botões normais */}
+      {!showCardTypeSelector ? (
+        <div className="animate-entry space-y-3 [animation-delay:160ms]">
+          {buttons.map(({ method, label, icon: Icon, color, disabled, blockedReason, isCard }) => (
+            <div key={method}>
+              <button
+                onClick={() => isCard ? handleCardClick() : pay(method)}
+                disabled={disabled}
+                className={`flex h-16 w-full items-center justify-between rounded-2xl px-6 font-black uppercase tracking-tight text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink/40 ${color}`}
+              >
+                <span className="flex items-center gap-3">
+                  <Icon className="size-6" strokeWidth={2.5} />
+                  <span>{label}</span>
+                </span>
+                {disabled && method === "caderneta" && (
+                  <Lock className="size-5" />
+                )}
+              </button>
+              {/* ✅ MOTIVO DO BLOQUEIO */}
+              {disabled && blockedReason && (
+                <p className="mt-1 text-center font-mono text-[11px] font-bold text-ink/50">
+                  {blockedReason}
+                </p>
               )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        // ✅ NOVO: Seletor secundário de tipo de cartão
+        <div className="animate-entry space-y-3 [animation-delay:160ms]">
+          <div className="mb-4 flex items-center gap-2">
+            <button
+              onClick={() => setShowCardTypeSelector(false)}
+              className="flex items-center gap-1 text-xs font-bold text-ink/60 hover:text-ink transition-colors"
+            >
+              <ChevronLeft className="size-4" /> Voltar
             </button>
-            {/* ✅ MOTIVO DO BLOQUEIO */}
-            {disabled && blockedReason && (
-              <p className="mt-1 text-center font-mono text-[11px] font-bold text-ink/50">
-                {blockedReason}
-              </p>
-            )}
+            <p className="text-xs font-bold text-ink/60">Escolha o tipo de cartão</p>
           </div>
-        ))}
-      </div>
+
+          <button
+            onClick={() => pay("cartao_credito")}
+            className="flex h-16 w-full items-center justify-between rounded-2xl bg-ink px-6 font-black uppercase tracking-tight text-white shadow-lg shadow-ink/20 transition-all hover:bg-ink/90 hover:shadow-xl active:scale-[0.98]"
+          >
+            <span className="flex items-center gap-3">
+              <CreditCard className="size-6" strokeWidth={2.5} />
+              <span>Cartão de Crédito</span>
+            </span>
+          </button>
+
+          <button
+            onClick={() => pay("cartao_debito")}
+            className="flex h-16 w-full items-center justify-between rounded-2xl bg-ink px-6 font-black uppercase tracking-tight text-white shadow-lg shadow-ink/20 transition-all hover:bg-ink/90 hover:shadow-xl active:scale-[0.98]"
+          >
+            <span className="flex items-center gap-3">
+              <CreditCard className="size-6" strokeWidth={2.5} />
+              <span>Cartão de Débito</span>
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* ✅ AVISO: Se caderneta está desbloqueada manualmente */}
       {cadernetaUnlocked && client && clientScore && isCadernettaBlocked(clientScore) && (
@@ -229,5 +276,9 @@ function Pagamento() {
 }
 
 function labelFor(m: PaymentMethod) {
-  return m === "dinheiro" ? "dinheiro" : m === "pix" ? "PIX" : m === "cartao" ? "cartão" : "caderneta";
+  if (m === "dinheiro") return "dinheiro";
+  if (m === "pix") return "PIX";
+  if (m === "cartao_credito") return "cartão de crédito";
+  if (m === "cartao_debito") return "cartão de débito";
+  return "caderneta";
 }
