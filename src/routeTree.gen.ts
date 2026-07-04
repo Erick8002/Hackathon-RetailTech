@@ -9,50 +9,246 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppEstoqueIndexRouteImport } from './routes/_app.estoque.index'
+import { Route as AppClientesIndexRouteImport } from './routes/_app.clientes.index'
+import { Route as AppVendasPagamentoRouteImport } from './routes/_app.vendas.pagamento'
+import { Route as AppVendasNovaRouteImport } from './routes/_app.vendas.nova'
+import { Route as AppVendasClienteRouteImport } from './routes/_app.vendas.cliente'
+import { Route as AppEstoqueNovoRouteImport } from './routes/_app.estoque.novo'
+import { Route as AppClientesIdRouteImport } from './routes/_app.clientes.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstoqueIndexRoute = AppEstoqueIndexRouteImport.update({
+  id: '/estoque/',
+  path: '/estoque/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientesIndexRoute = AppClientesIndexRouteImport.update({
+  id: '/clientes/',
+  path: '/clientes/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendasPagamentoRoute = AppVendasPagamentoRouteImport.update({
+  id: '/vendas/pagamento',
+  path: '/vendas/pagamento',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendasNovaRoute = AppVendasNovaRouteImport.update({
+  id: '/vendas/nova',
+  path: '/vendas/nova',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendasClienteRoute = AppVendasClienteRouteImport.update({
+  id: '/vendas/cliente',
+  path: '/vendas/cliente',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstoqueNovoRoute = AppEstoqueNovoRouteImport.update({
+  id: '/estoque/novo',
+  path: '/estoque/novo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientesIdRoute = AppClientesIdRouteImport.update({
+  id: '/clientes/$id',
+  path: '/clientes/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
+  '/clientes/$id': typeof AppClientesIdRoute
+  '/estoque/novo': typeof AppEstoqueNovoRoute
+  '/vendas/cliente': typeof AppVendasClienteRoute
+  '/vendas/nova': typeof AppVendasNovaRoute
+  '/vendas/pagamento': typeof AppVendasPagamentoRoute
+  '/clientes/': typeof AppClientesIndexRoute
+  '/estoque/': typeof AppEstoqueIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/': typeof AppIndexRoute
+  '/clientes/$id': typeof AppClientesIdRoute
+  '/estoque/novo': typeof AppEstoqueNovoRoute
+  '/vendas/cliente': typeof AppVendasClienteRoute
+  '/vendas/nova': typeof AppVendasNovaRoute
+  '/vendas/pagamento': typeof AppVendasPagamentoRoute
+  '/clientes': typeof AppClientesIndexRoute
+  '/estoque': typeof AppEstoqueIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/clientes/$id': typeof AppClientesIdRoute
+  '/_app/estoque/novo': typeof AppEstoqueNovoRoute
+  '/_app/vendas/cliente': typeof AppVendasClienteRoute
+  '/_app/vendas/nova': typeof AppVendasNovaRoute
+  '/_app/vendas/pagamento': typeof AppVendasPagamentoRoute
+  '/_app/clientes/': typeof AppClientesIndexRoute
+  '/_app/estoque/': typeof AppEstoqueIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/clientes/$id'
+    | '/estoque/novo'
+    | '/vendas/cliente'
+    | '/vendas/nova'
+    | '/vendas/pagamento'
+    | '/clientes/'
+    | '/estoque/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/login'
+    | '/'
+    | '/clientes/$id'
+    | '/estoque/novo'
+    | '/vendas/cliente'
+    | '/vendas/nova'
+    | '/vendas/pagamento'
+    | '/clientes'
+    | '/estoque'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/_app/'
+    | '/_app/clientes/$id'
+    | '/_app/estoque/novo'
+    | '/_app/vendas/cliente'
+    | '/_app/vendas/nova'
+    | '/_app/vendas/pagamento'
+    | '/_app/clientes/'
+    | '/_app/estoque/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/estoque/': {
+      id: '/_app/estoque/'
+      path: '/estoque'
+      fullPath: '/estoque/'
+      preLoaderRoute: typeof AppEstoqueIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clientes/': {
+      id: '/_app/clientes/'
+      path: '/clientes'
+      fullPath: '/clientes/'
+      preLoaderRoute: typeof AppClientesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/vendas/pagamento': {
+      id: '/_app/vendas/pagamento'
+      path: '/vendas/pagamento'
+      fullPath: '/vendas/pagamento'
+      preLoaderRoute: typeof AppVendasPagamentoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/vendas/nova': {
+      id: '/_app/vendas/nova'
+      path: '/vendas/nova'
+      fullPath: '/vendas/nova'
+      preLoaderRoute: typeof AppVendasNovaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/vendas/cliente': {
+      id: '/_app/vendas/cliente'
+      path: '/vendas/cliente'
+      fullPath: '/vendas/cliente'
+      preLoaderRoute: typeof AppVendasClienteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/estoque/novo': {
+      id: '/_app/estoque/novo'
+      path: '/estoque/novo'
+      fullPath: '/estoque/novo'
+      preLoaderRoute: typeof AppEstoqueNovoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clientes/$id': {
+      id: '/_app/clientes/$id'
+      path: '/clientes/$id'
+      fullPath: '/clientes/$id'
+      preLoaderRoute: typeof AppClientesIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
+  AppClientesIdRoute: typeof AppClientesIdRoute
+  AppEstoqueNovoRoute: typeof AppEstoqueNovoRoute
+  AppVendasClienteRoute: typeof AppVendasClienteRoute
+  AppVendasNovaRoute: typeof AppVendasNovaRoute
+  AppVendasPagamentoRoute: typeof AppVendasPagamentoRoute
+  AppClientesIndexRoute: typeof AppClientesIndexRoute
+  AppEstoqueIndexRoute: typeof AppEstoqueIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
+  AppClientesIdRoute: AppClientesIdRoute,
+  AppEstoqueNovoRoute: AppEstoqueNovoRoute,
+  AppVendasClienteRoute: AppVendasClienteRoute,
+  AppVendasNovaRoute: AppVendasNovaRoute,
+  AppVendasPagamentoRoute: AppVendasPagamentoRoute,
+  AppClientesIndexRoute: AppClientesIndexRoute,
+  AppEstoqueIndexRoute: AppEstoqueIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
