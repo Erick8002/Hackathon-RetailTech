@@ -72,13 +72,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
-    beforeLoad: () => {
-      if (
-        typeof window !== "undefined" &&
-        window.location.pathname === "/" &&
-        !useApp.getState().isAuthed
-      ) {
+    beforeLoad: ({ location }) => {
+      // ✅ Se NÃO estiver autenticado e tentar ir para qualquer rota que NÃO seja o /login, joga para o login.
+      if (!useApp.getState().isAuthed && location.pathname !== "/login") {
         throw redirect({ to: "/login" });
+      }
+      
+      // ✅ Se já ESTIVER autenticado e tentar forçar a tela de login, manda de volta para a Home.
+      if (useApp.getState().isAuthed && location.pathname === "/login") {
+        throw redirect({ to: "/" });
       }
     },
     head: () => (
