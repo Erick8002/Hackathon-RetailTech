@@ -3,17 +3,14 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
-  redirect,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { useApp } from "@/store/app-store";
 
 function NotFoundComponent() {
   return (
@@ -39,10 +36,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+  reportLovableError(error, { boundary: "tanstack_root_error_component" });
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-4">
@@ -53,10 +47,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
+            onClick={reset}
             className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white"
           >
             Tentar novamente
@@ -72,17 +63,6 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
-    beforeLoad: ({ location }) => {
-      // ✅ Se NÃO estiver autenticado e tentar ir para qualquer rota que NÃO seja o /login, joga para o login.
-      if (!useApp.getState().isAuthed && location.pathname !== "/login") {
-        throw redirect({ to: "/login" });
-      }
-      
-      // ✅ Se já ESTIVER autenticado e tentar forçar a tela de login, manda de volta para a Home.
-      if (useApp.getState().isAuthed && location.pathname === "/login") {
-        throw redirect({ to: "/" });
-      }
-    },
     head: () => (
       {
         meta: [

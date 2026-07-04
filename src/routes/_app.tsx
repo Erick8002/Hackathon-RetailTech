@@ -4,8 +4,22 @@ import { useApp } from "@/store/app-store";
 
 export const Route = createFileRoute("/_app")(
   {
-    beforeLoad: () => {
-      if (typeof window !== "undefined" && !useApp.getState().isAuthed) {
+    beforeLoad: async () => {
+      if (typeof window === "undefined") return;
+
+      await new Promise(resolve => {
+        const checkAuth = () => {
+          const state = useApp.getState();
+          if (state.isAuthed || localStorage.getItem("aesgp_auth")) {
+            resolve(null);
+          } else {
+            setTimeout(checkAuth, 10);
+          }
+        };
+        checkAuth();
+      });
+
+      if (!useApp.getState().isAuthed) {
         throw redirect({ to: "/login" });
       }
     },
