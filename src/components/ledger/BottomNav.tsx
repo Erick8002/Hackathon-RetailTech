@@ -16,7 +16,7 @@ export function BottomNav() {
             key={to}
             to={to}
             activeOptions={{ exact: to === "/" }}
-            className="group flex flex-1 flex-col items-center gap-1 py-3 text-ink/40 data-[status=active]:text-ink"
+            className="group flex flex-1 flex-col items-center gap-1 py-3 text-ink/70 data-[status=active]:text-ink"
           >
             <Icon className="size-6" strokeWidth={2.5} />
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider">

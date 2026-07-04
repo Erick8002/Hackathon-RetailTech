@@ -1,15 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Banknote, BookOpen, CreditCard, Smartphone } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { PageHeader } from "@/components/ledger/PageHeader";
 import { useApp, type PaymentMethod } from "@/store/app-store";
 import { brl } from "@/lib/format";
 
+const searchSchema = z.object({
+  semCliente: z.boolean().optional(),
+});
+
 export const Route = createFileRoute("/_app/vendas/pagamento")({
+  validateSearch: (s) => searchSchema.parse(s),
   component: Pagamento,
 });
 
 function Pagamento() {
+  const { semCliente } = Route.useSearch();
   const products = useApp((s) => s.products);
   const cart = useApp((s) => s.cart);
   const cartTotal = useApp((s) => s.cartTotal)();
@@ -19,7 +26,8 @@ function Pagamento() {
   const navigate = useNavigate();
 
   const client = clients.find((c) => c.id === selectedId);
-  const canCaderneta = !!client;
+  // Só permite caderneta se tiver cliente E não for venda sem cliente
+  const canCaderneta = !!client && !semCliente;
 
   const pay = (method: PaymentMethod) => {
     finalizeSale(method);
@@ -64,6 +72,11 @@ function Pagamento() {
             Cliente: <span className="font-bold text-ink">{client.name}</span>
           </p>
         )}
+        {semCliente && (
+          <p className="mt-3 font-mono text-xs text-ink/60">
+            <span className="font-bold text-ledger-blue">Venda sem cliente vinculado</span>
+          </p>
+        )}
       </div>
 
       <div className="animate-entry mb-6 space-y-2 [animation-delay:80ms]">
@@ -100,7 +113,7 @@ function Pagamento() {
             </span>
             {method === "caderneta" && !canCaderneta && (
               <span className="font-mono text-[10px] normal-case tracking-normal">
-                Selecione um cliente
+                {semCliente ? "Sem cliente vinculado" : "Selecione um cliente"}
               </span>
             )}
           </button>

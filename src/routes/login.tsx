@@ -21,10 +21,6 @@ function LoginPage() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@") || password.length < 3) {
-      toast.error("Preencha e-mail e senha para continuar.");
-      return;
-    }
     login(email);
     toast.success("Bem-vindo de volta!");
     navigate({ to: "/" });
@@ -87,10 +83,6 @@ function LoginPage() {
             Criar Conta
           </button>
         </form>
-
-        <p className="mt-8 text-center font-mono text-[10px] uppercase tracking-widest text-ink/40">
-          Login simulado · qualquer e-mail funciona
-        </p>
       </div>
     </div>
   );

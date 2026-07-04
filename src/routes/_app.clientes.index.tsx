@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Filter, Search, X } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Filter, Plus, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/ledger/PageHeader";
@@ -19,7 +19,11 @@ function Clientes() {
   const { filtro } = Route.useSearch();
   const navigate = Route.useNavigate();
   const clients = useApp((s) => s.clients);
+  const addClient = useApp((s) => s.addClient);
   const [q, setQ] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientPhone, setNewClientPhone] = useState("");
 
   const filtered = useMemo(() => {
     let list = [...clients].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
@@ -29,8 +33,16 @@ function Clientes() {
     return list;
   }, [clients, filtro, q]);
 
+  const handleAddClient = () => {
+    if (!newClientName.trim()) return;
+    addClient(newClientName.trim(), newClientPhone.trim());
+    setNewClientName("");
+    setNewClientPhone("");
+    setShowForm(false);
+  };
+
   return (
-    <div>
+    <div className="pb-20">
       <PageHeader
         title="Meus Clientes"
         subtitle={`${clients.length} cadastrados`}
@@ -47,27 +59,74 @@ function Clientes() {
             className="h-12 w-full rounded-xl border-2 border-ink/10 bg-white pl-11 pr-4 text-base font-medium outline-none focus:border-ink"
           />
         </div>
-        <button
-          onClick={() =>
-            navigate({ search: filtro === "devedores" ? {} : { filtro: "devedores" } })
-          }
-          className={`flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 font-black uppercase tracking-tight ${
-            filtro === "devedores"
-              ? "border-ledger-red bg-ledger-red text-white"
-              : "border-ink/20 bg-white text-ink"
-          }`}
-        >
-          {filtro === "devedores" ? (
-            <>
-              <X className="size-4" /> Remover filtro de devedores
-            </>
-          ) : (
-            <>
-              <Filter className="size-4" /> Filtrar clientes com dívida
-            </>
-          )}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() =>
+              navigate({ search: filtro === "devedores" ? {} : { filtro: "devedores" } })
+            }
+            className={`flex flex-1 h-11 items-center justify-center gap-2 rounded-xl border-2 font-black uppercase tracking-tight ${
+              filtro === "devedores"
+                ? "border-ledger-red bg-ledger-red text-white"
+                : "border-ink/20 bg-white text-ink"
+            }`}
+          >
+            {filtro === "devedores" ? (
+              <>
+                <X className="size-4" /> Remover filtro
+              </>
+            ) : (
+              <>
+                <Filter className="size-4" /> Devedores
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-ledger-green bg-ledger-green/10 text-ledger-green active:scale-[0.98]"
+          >
+            <Plus className="size-5" />
+          </button>
+        </div>
       </div>
+
+      {/* Formulário de novo cliente */}
+      {showForm && (
+        <div className="animate-entry mb-4 space-y-3 rounded-2xl border-2 border-ledger-green bg-ledger-green/5 p-4 [animation-delay:80ms]">
+          <div className="flex items-center justify-between">
+            <p className="font-bold uppercase">Novo Cliente</p>
+            <button
+              onClick={() => setShowForm(false)}
+              className="rounded-lg p-1 hover:bg-black/10"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          <input
+            type="text"
+            value={newClientName}
+            onChange={(e) => setNewClientName(e.target.value)}
+            placeholder="Nome completo"
+            className="h-11 w-full rounded-lg border-2 border-ink/10 bg-white px-3 text-sm font-medium outline-none focus:border-ink"
+          />
+
+          <input
+            type="tel"
+            value={newClientPhone}
+            onChange={(e) => setNewClientPhone(e.target.value)}
+            placeholder="Telefone (opcional)"
+            className="h-11 w-full rounded-lg border-2 border-ink/10 bg-white px-3 text-sm font-medium outline-none focus:border-ink"
+          />
+
+          <button
+            onClick={handleAddClient}
+            disabled={!newClientName.trim()}
+            className="h-11 w-full rounded-lg bg-ledger-green font-bold uppercase text-white disabled:bg-ink/20 disabled:text-ink/40"
+          >
+            Salvar Cliente
+          </button>
+        </div>
+      )}
 
       <div className="animate-entry space-y-2 [animation-delay:80ms]">
         {filtered.map((c) => (

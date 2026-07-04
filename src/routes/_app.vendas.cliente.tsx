@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, ArrowRight, Shield, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ArrowRight, Plus, Shield, ShieldAlert, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/ledger/PageHeader";
 import { useApp } from "@/store/app-store";
@@ -22,9 +22,13 @@ function VendaCliente() {
   const cartTotal = useApp((s) => s.cartTotal)();
   const selectedId = useApp((s) => s.selectedClientId);
   const selectClient = useApp((s) => s.selectClient);
+  const addClient = useApp((s) => s.addClient);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [override, setOverride] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientPhone, setNewClientPhone] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -37,6 +41,14 @@ function VendaCliente() {
 
   const goPayment = () => navigate({ to: "/vendas/pagamento" });
 
+  const handleAddClient = () => {
+    if (!newClientName.trim()) return;
+    addClient(newClientName.trim(), newClientPhone.trim());
+    setNewClientName("");
+    setNewClientPhone("");
+    setShowForm(false);
+  };
+
   return (
     <div className="pb-40">
       <PageHeader
@@ -47,12 +59,26 @@ function VendaCliente() {
 
       {!selected && (
         <>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar cliente..."
-            className="animate-entry mb-4 h-14 w-full rounded-xl border-2 border-ink/10 bg-white px-4 text-base font-medium outline-none focus:border-ink"
-          />
+          {/* Botão de continuar SEM cliente - de cara */}
+          <button
+            onClick={goPayment}
+            className="animate-entry mb-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-ledger-blue bg-ledger-blue/5 font-bold uppercase text-ledger-blue active:scale-[0.98]"
+          >
+            <ArrowRight className="size-5" />
+            Vender SEM Cliente
+          </button>
+
+          {/* Buscar cliente */}
+          <div className="animate-entry mb-4 [animation-delay:40ms]">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar cliente..."
+              className="h-14 w-full rounded-xl border-2 border-ink/10 bg-white px-4 text-base font-medium outline-none focus:border-ink"
+            />
+          </div>
+
+          {/* Lista de clientes */}
           <div className="animate-entry space-y-2 [animation-delay:80ms]">
             {filtered.map((c) => (
               <button
@@ -74,6 +100,54 @@ function VendaCliente() {
               </button>
             ))}
           </div>
+
+          {/* Botão cadastrar novo cliente */}
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="animate-entry mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink/20 bg-white font-bold uppercase text-ink [animation-delay:120ms] active:scale-[0.98]"
+          >
+            <Plus className="size-5" />
+            Novo Cliente
+          </button>
+
+          {/* Formulário de novo cliente */}
+          {showForm && (
+            <div className="animate-entry mt-4 space-y-3 rounded-2xl border-2 border-ledger-green bg-ledger-green/5 p-4 [animation-delay:160ms]">
+              <div className="flex items-center justify-between">
+                <p className="font-bold uppercase">Cadastrar Cliente</p>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="rounded-lg p-1 hover:bg-black/10"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="Nome do cliente"
+                className="h-11 w-full rounded-lg border-2 border-ink/10 bg-white px-3 text-sm font-medium outline-none focus:border-ink"
+              />
+
+              <input
+                type="tel"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+                placeholder="Telefone (opcional)"
+                className="h-11 w-full rounded-lg border-2 border-ink/10 bg-white px-3 text-sm font-medium outline-none focus:border-ink"
+              />
+
+              <button
+                onClick={handleAddClient}
+                disabled={!newClientName.trim()}
+                className="h-11 w-full rounded-lg bg-ledger-green font-bold uppercase text-white disabled:bg-ink/20 disabled:text-ink/40"
+              >
+                Salvar Cliente
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -151,12 +225,13 @@ function VendaCliente() {
                   Desbloquear sob minha responsabilidade
                 </button>
               )}
-              <button
-                onClick={goPayment}
+              <Link
+                to="/vendas/pagamento"
+                search={{ aVista: true } as never}
                 className="flex h-14 w-full items-center justify-center rounded-2xl border-2 border-ink font-bold uppercase text-ink active:scale-[0.98]"
               >
                 Pagar à vista
-              </button>
+              </Link>
             </>
           )}
 

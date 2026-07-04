@@ -37,6 +37,7 @@ type State = {
   // clients
   selectClient: (id: string | null) => void;
   receivePayment: (clientId: string, amount: number) => void;
+  addClient: (name: string, phone: string) => void;
 
   // sale
   finalizeSale: (method: PaymentMethod) => void;
@@ -118,6 +119,22 @@ export const useApp = create<State>((set, get) => ({
       }),
     });
   },
+
+  addClient: (name, phone) =>
+    set({
+      clients: [
+        ...get().clients,
+        {
+          id: nid(),
+          name,
+          phone,
+          debt: 0,
+          overdueDays: 0,
+          purchases: 0,
+          ledger: [],
+        },
+      ],
+    }),
 
   finalizeSale: (method) => {
     const total = get().cartTotal();

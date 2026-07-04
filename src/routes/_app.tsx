@@ -3,11 +3,13 @@ import { BottomNav } from "@/components/ledger/BottomNav";
 import { useApp } from "@/store/app-store";
 
 export const Route = createFileRoute("/_app")({
+  /*
   beforeLoad: () => {
     if (typeof window !== "undefined" && !useApp.getState().isAuthed) {
       throw redirect({ to: "/login" });
     }
   },
+  */
   component: AppLayout,
 });
 
