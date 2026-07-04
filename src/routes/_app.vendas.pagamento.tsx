@@ -1,13 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Banknote, BookOpen, CreditCard, Smartphone } from "lucide-react";
+import { Banknote, BookOpen, CreditCard, Lock, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/ledger/PageHeader";
 import { useApp, type PaymentMethod } from "@/store/app-store";
 import { brl } from "@/lib/format";
+import type { Client } from "@/lib/seed-data";
 
 const searchSchema = z.object({
   semCliente: z.boolean().optional(),
+  aVista: z.boolean().optional(),
 });
 
 export const Route = createFileRoute("/_app/vendas/pagamento")({
@@ -15,21 +17,55 @@ export const Route = createFileRoute("/_app/vendas/pagamento")({
   component: Pagamento,
 });
 
+// ✅ FUNÇÃO: Determina o score (status) do cliente
+type Score = "confiavel" | "recente" | "divida";
+function scoreFor(c: Client): Score {
+  if (c.debt > 0) return "divida";
+  if (c.purchases < 5) return "recente";
+  return "confiavel";
+}
+
+// ✅ FUNÇÃO: Verifica se caderneta está bloqueada naturalmente
+function isCadernettaBlocked(score: Score): boolean {
+  return score === "divida" || score === "recente";
+}
+
 function Pagamento() {
-  const { semCliente } = Route.useSearch();
+  const { semCliente, aVista } = Route.useSearch();
   const products = useApp((s) => s.products);
   const cart = useApp((s) => s.cart);
   const cartTotal = useApp((s) => s.cartTotal)();
   const selectedId = useApp((s) => s.selectedClientId);
   const clients = useApp((s) => s.clients);
   const finalizeSale = useApp((s) => s.finalizeSale);
+  const cadernetaUnlocked = useApp((s) => s.cadernetaUnlocked);
   const navigate = useNavigate();
 
   const client = clients.find((c) => c.id === selectedId);
-  // Só permite caderneta se tiver cliente E não for venda sem cliente
-  const canCaderneta = !!client && !semCliente;
+  const clientScore = client ? scoreFor(client) : null;
+
+  // ✅ LÓGICA COMPLETA: Caderneta só é permitida se:
+  // 1. Existe cliente vinculado
+  // 2. Não é venda sem cliente
+  // 3. OU cliente é confiável OU caderneta foi desbloqueada manualmente
+  const canCaderneta = 
+    !!client && 
+    !semCliente && 
+    (
+      !clientScore || 
+      !isCadernettaBlocked(clientScore) || 
+      cadernetaUnlocked
+    );
 
   const pay = (method: PaymentMethod) => {
+    // ✅ VALIDAÇÃO: Impedir caderneta se estiver bloqueada
+    if (method === "caderneta" && !canCaderneta) {
+      toast.error(
+        "Caderneta está bloqueada para este cliente. Desbloqueie na tela anterior ou escolha outra forma de pagamento.",
+      );
+      return;
+    }
+
     finalizeSale(method);
     toast.success(
       method === "caderneta"
@@ -39,28 +75,60 @@ function Pagamento() {
     navigate({ to: "/" });
   };
 
+  // ✅ BOTÕES: Com informações sobre bloqueio
   const buttons: {
     method: PaymentMethod;
     label: string;
     icon: typeof Banknote;
     color: string;
     disabled?: boolean;
+    blockedReason?: string;
   }[] = [
-    { method: "dinheiro", label: "Dinheiro", icon: Banknote, color: "bg-ledger-green" },
-    { method: "pix", label: "PIX", icon: Smartphone, color: "bg-ledger-blue" },
-    { method: "cartao", label: "Cartão", icon: CreditCard, color: "bg-ink" },
+    { 
+      method: "dinheiro", 
+      label: "Dinheiro", 
+      icon: Banknote, 
+      color: "bg-ledger-green" 
+    },
+    { 
+      method: "pix", 
+      label: "PIX", 
+      icon: Smartphone, 
+      color: "bg-ledger-blue" 
+    },
+    { 
+      method: "cartao", 
+      label: "Cartão", 
+      icon: CreditCard, 
+      color: "bg-ink" 
+    },
     {
       method: "caderneta",
       label: "Adicionar à Caderneta",
       icon: BookOpen,
       color: "bg-ledger-yellow",
       disabled: !canCaderneta,
+      // ✅ MENSAGEM: Motivo do bloqueio
+      blockedReason: 
+        semCliente 
+          ? "Sem cliente vinculado"
+          : !client 
+          ? "Selecione um cliente"
+          : clientScore && isCadernettaBlocked(clientScore) && !cadernetaUnlocked
+          ? clientScore === "recente" 
+            ? "Cliente recente (< 5 compras)"
+            : "Cliente com dívida ativa"
+          : undefined,
     },
   ];
 
   return (
     <div>
-      <PageHeader title="Fechamento" subtitle="Escolha o pagamento" back="/vendas/cliente" />
+      <PageHeader 
+        title="Fechamento" 
+        subtitle="Escolha o pagamento" 
+        back={aVista ? "/vendas/cliente" : "/vendas/cliente"} 
+      />
 
       <div className="animate-entry mb-6 rounded-2xl border-2 border-ink bg-white p-6 text-center">
         <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink/40">
@@ -70,11 +138,30 @@ function Pagamento() {
         {client && (
           <p className="mt-3 font-mono text-xs text-ink/60">
             Cliente: <span className="font-bold text-ink">{client.name}</span>
+            {/* ✅ STATUS DO CLIENTE */}
+            {clientScore && (
+              <span className={`ml-2 inline-block rounded px-2 py-1 text-[10px] font-bold uppercase ${
+                clientScore === "confiavel" 
+                  ? "bg-ledger-green/20 text-ledger-green"
+                  : clientScore === "recente"
+                  ? "bg-ledger-yellow/20 text-ledger-yellow"
+                  : "bg-ledger-red/20 text-ledger-red"
+              }`}>
+                {clientScore === "confiavel" ? "✓ Confiável" : 
+                 clientScore === "recente" ? "⚠️ Recente" : 
+                 "🚨 Com Dívida"}
+              </span>
+            )}
           </p>
         )}
         {semCliente && (
           <p className="mt-3 font-mono text-xs text-ink/60">
             <span className="font-bold text-ledger-blue">Venda sem cliente vinculado</span>
+          </p>
+        )}
+        {aVista && (
+          <p className="mt-3 font-mono text-xs text-ink/60">
+            <span className="font-bold text-ledger-green">Pagamento à vista</span>
           </p>
         )}
       </div>
@@ -100,25 +187,43 @@ function Pagamento() {
       </div>
 
       <div className="animate-entry space-y-3 [animation-delay:160ms]">
-        {buttons.map(({ method, label, icon: Icon, color, disabled }) => (
-          <button
-            key={method}
-            onClick={() => pay(method)}
-            disabled={disabled}
-            className={`flex h-16 w-full items-center justify-between rounded-2xl px-6 font-black uppercase tracking-tight text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink/40 ${color}`}
-          >
-            <span className="flex items-center gap-3">
-              <Icon className="size-6" strokeWidth={2.5} />
-              <span>{label}</span>
-            </span>
-            {method === "caderneta" && !canCaderneta && (
-              <span className="font-mono text-[10px] normal-case tracking-normal">
-                {semCliente ? "Sem cliente vinculado" : "Selecione um cliente"}
+        {buttons.map(({ method, label, icon: Icon, color, disabled, blockedReason }) => (
+          <div key={method}>
+            <button
+              onClick={() => pay(method)}
+              disabled={disabled}
+              className={`flex h-16 w-full items-center justify-between rounded-2xl px-6 font-black uppercase tracking-tight text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink/40 ${color}`}
+            >
+              <span className="flex items-center gap-3">
+                <Icon className="size-6" strokeWidth={2.5} />
+                <span>{label}</span>
               </span>
+              {disabled && method === "caderneta" && (
+                <Lock className="size-5" />
+              )}
+            </button>
+            {/* ✅ MOTIVO DO BLOQUEIO */}
+            {disabled && blockedReason && (
+              <p className="mt-1 text-center font-mono text-[11px] font-bold text-ink/50">
+                {blockedReason}
+              </p>
             )}
-          </button>
+          </div>
         ))}
       </div>
+
+      {/* ✅ AVISO: Se caderneta está desbloqueada manualmente */}
+      {cadernetaUnlocked && client && clientScore && isCadernettaBlocked(clientScore) && (
+        <div className="mt-6 rounded-2xl border-2 border-ledger-blue bg-ledger-blue/5 p-4">
+          <p className="flex items-center gap-2 font-black uppercase text-ledger-blue">
+            <BookOpen className="size-5" /> Caderneta Desbloqueada Manualmente
+          </p>
+          <p className="mt-2 text-sm text-ink/70">
+            Você desbloqueou a caderneta para este cliente sob sua responsabilidade. 
+            Esta venda será registrada como crédito.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

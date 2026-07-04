@@ -10,11 +10,20 @@ export const Route = createFileRoute("/_app/vendas/cliente")({
   component: VendaCliente,
 });
 
+// ✅ TIPAGEM: Define os status possíveis do cliente
 type Score = "confiavel" | "recente" | "divida";
+
+// ✅ FUNÇÃO: Determina o score (status) do cliente
 function scoreFor(c: Client): Score {
   if (c.debt > 0) return "divida";
   if (c.purchases < 5) return "recente";
   return "confiavel";
+}
+
+// ✅ FUNÇÃO: Verifica se a caderneta está bloqueada naturalmente
+// (sem considerar o desbloqueio manual)
+function isCadernettaBlocked(score: Score): boolean {
+  return score === "divida" || score === "recente";
 }
 
 function VendaCliente() {
@@ -25,7 +34,9 @@ function VendaCliente() {
   const addClient = useApp((s) => s.addClient);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [override, setOverride] = useState(false);
+  // ✅ REMOVIDO: useState local 'override' em favor do estado global
+  const cadernetaUnlocked = useApp((s) => s.cadernetaUnlocked);
+  const setCadernetaUnlocked = useApp((s) => s.setCadernetaUnlocked);
   const [showForm, setShowForm] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
@@ -48,6 +59,12 @@ function VendaCliente() {
     setNewClientPhone("");
     setShowForm(false);
   };
+
+  // ✅ NOVA FUNÇÃO: Determina se caderneta pode ser usada
+  // (leva em conta desbloqueio manual)
+  const canUseCaderneta = selected && score ? 
+    !isCadernettaBlocked(score) || cadernetaUnlocked 
+    : false;
 
   return (
     <div className="pb-40">
@@ -85,7 +102,8 @@ function VendaCliente() {
                 key={c.id}
                 onClick={() => {
                   selectClient(c.id);
-                  setOverride(false);
+                  // ✅ RESET: Resetar desbloqueio ao trocar de cliente
+                  setCadernetaUnlocked(false);
                 }}
                 className="flex w-full items-center justify-between rounded-xl border-2 border-ink/10 bg-white p-4 text-left active:scale-[0.99]"
               >
@@ -163,13 +181,18 @@ function VendaCliente() {
                 <p className="font-mono text-xs text-ink/50">ID #{selected.id.toUpperCase()}</p>
               </div>
               <button
-                onClick={() => selectClient(null)}
+                onClick={() => {
+                  selectClient(null);
+                  // ✅ RESET: Resetar desbloqueio ao deselecionar cliente
+                  setCadernetaUnlocked(false);
+                }}
                 className="rounded-lg border-2 border-ink/10 px-2 py-1 font-mono text-[10px] font-bold uppercase"
               >
                 Trocar
               </button>
             </div>
 
+            {/* ✅ AVISO: Dívida Ativa */}
             {score === "divida" && (
               <div className="rounded-lg border-2 border-ledger-red bg-ledger-red/5 p-4">
                 <p className="flex items-center gap-2 font-black uppercase text-ledger-red">
@@ -180,6 +203,7 @@ function VendaCliente() {
                 </p>
               </div>
             )}
+            {/* ✅ AVISO: Cliente Recente */}
             {score === "recente" && (
               <div className="rounded-lg border-2 border-ledger-yellow bg-ledger-yellow/10 p-4">
                 <p className="flex items-center gap-2 font-black uppercase text-ledger-yellow">
@@ -190,6 +214,7 @@ function VendaCliente() {
                 </p>
               </div>
             )}
+            {/* ✅ APROVADO: Cliente Confiável */}
             {score === "confiavel" && (
               <div className="rounded-lg border-2 border-ledger-green bg-ledger-green/10 p-4">
                 <p className="flex items-center gap-2 font-black uppercase text-ledger-green">
@@ -202,7 +227,8 @@ function VendaCliente() {
             )}
           </div>
 
-          {score === "confiavel" || override ? (
+          {/* ✅ LÓGICA: Se pode usar caderneta (confiável ou desbloqueado) */}
+          {canUseCaderneta ? (
             <button
               onClick={goPayment}
               className="flex h-16 w-full items-center justify-center rounded-2xl bg-ink font-black uppercase tracking-tight text-white active:scale-[0.98]"
@@ -211,20 +237,43 @@ function VendaCliente() {
             </button>
           ) : (
             <>
+              {/* Caderneta Bloqueada */}
               <button
                 disabled
                 className="flex h-16 w-full cursor-not-allowed items-center justify-center rounded-2xl bg-ink/10 font-black uppercase tracking-tight text-ink/40"
               >
                 Caderneta Bloqueada
               </button>
-              {score === "recente" && (
+              
+              {/* ✅ DESBLOQUEIO: Apenas para clientes recentes (dívida ativa não recomenda desbloqueio) */}
+              {score === "recente" && !cadernetaUnlocked && (
                 <button
-                  onClick={() => setOverride(true)}
-                  className="w-full text-center text-xs font-bold text-ledger-blue underline"
+                  onClick={() => setCadernetaUnlocked(true)}
+                  className="w-full rounded-lg border-2 border-ledger-blue bg-ledger-blue/5 px-4 py-2 text-center font-bold uppercase text-ledger-blue transition active:scale-[0.98]"
                 >
-                  Desbloquear sob minha responsabilidade
+                  🔓 Desbloquear sob minha responsabilidade
                 </button>
               )}
+
+              {/* ✅ DESBLOQUEADO: Mostrar confirmação */}
+              {cadernetaUnlocked && (
+                <div className="rounded-lg border-2 border-ledger-blue bg-ledger-blue/10 p-4">
+                  <p className="font-black uppercase text-ledger-blue">
+                    ✓ Caderneta Desbloqueada
+                  </p>
+                  <p className="mt-1 text-sm text-ink/70">
+                    Venda será registrada na caderneta sob sua responsabilidade.
+                  </p>
+                  <button
+                    onClick={goPayment}
+                    className="mt-3 flex h-12 w-full items-center justify-center rounded-lg bg-ledger-blue font-bold uppercase text-white active:scale-[0.98]"
+                  >
+                    Continuar com Caderneta
+                  </button>
+                </div>
+              )}
+
+              {/* Opção de pagar à vista */}
               <Link
                 to="/vendas/pagamento"
                 search={{ aVista: true } as never}

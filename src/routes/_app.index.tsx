@@ -41,7 +41,7 @@ function HomePage() {
               logout();
               navigate({ to: "/login" });
             }}
-            className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-ink/60"
+            className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-ink/60 hover:text-ink transition-colors"
           >
             <LogOut className="size-3" /> Sair
           </button>
@@ -80,10 +80,10 @@ function HomePage() {
         <Link
           to="/clientes"
           search={{ filtro: "devedores" }}
-          className="animate-entry flex items-center justify-between rounded-2xl bg-ledger-red p-4 text-white shadow-lg shadow-ledger-red/20 [animation-delay:150ms] active:scale-[0.99]"
+          className="animate-entry flex items-center justify-between rounded-2xl bg-ledger-red p-4 text-white shadow-lg shadow-ledger-red/20 [animation-delay:150ms] transition-all hover:bg-ledger-red/90 hover:shadow-xl active:scale-[0.99]"
         >
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="size-6 shrink-0" strokeWidth={2.5} />
+          <div className="flex items-center gap-3 ">
+            <AlertTriangle className="size-6 shrink-0 " strokeWidth={2.5} />
             <div className="min-w-0">
               <p className="font-black uppercase leading-tight">
                 {overdue.length} clientes com pendências atrasadas
@@ -95,34 +95,37 @@ function HomePage() {
         </Link>
       )}
 
+      {/* --- SEÇÃO DE BOTÕES COM HOVER ADICIONADO --- */}
       <nav className="animate-entry space-y-3 [animation-delay:200ms]">
         <Link
           to="/vendas/nova"
-          className="flex h-24 items-center justify-between rounded-2xl bg-ink px-6 text-white shadow-lg shadow-ink/20 active:scale-[0.98]"
+          className="flex h-24 items-center justify-between rounded-2xl bg-ink px-6 text-white shadow-lg shadow-ink/20 transition-all hover:bg-ink/90 hover:shadow-xl hover:scale-[1.01] active:scale-[0.98]"
         >
           <span className="flex items-center gap-3">
             <ShoppingBag className="size-7" strokeWidth={2.5} />
-            <span className="text-2xl font-black uppercase tracking-tight">Nova Venda</span>
+            <span className="text-2xl font-black uppercase tracking-tight">Realizar Venda</span>
           </span>
-          <ArrowRight className="size-6 opacity-70" />
+          <ArrowRight className="size-6 opacity-70 group-hover:translate-x-1 transition-transform" />
         </Link>
+        
         <Link
           to="/estoque"
-          className="flex h-20 items-center justify-between rounded-2xl border-4 border-ink bg-white px-6 active:scale-[0.98]"
+          className="flex h-20 items-center justify-between rounded-2xl border-4 border-ink bg-white px-6 transition-all hover:bg-ink/5 hover:scale-[1.01] active:scale-[0.98]"
         >
           <span className="flex items-center gap-3">
             <Package className="size-6" strokeWidth={2.5} />
-            <span className="text-xl font-black uppercase tracking-tight">Meu Estoque</span>
+            <span className="text-xl font-black uppercase tracking-tight">Estoque</span>
           </span>
           <ArrowRight className="size-5 text-ink/30" />
         </Link>
+        
         <Link
           to="/clientes"
-          className="flex h-20 items-center justify-between rounded-2xl border-4 border-ink bg-white px-6 active:scale-[0.98]"
+          className="flex h-20 items-center justify-between rounded-2xl border-4 border-ink bg-white px-6 transition-all hover:bg-ink/5 hover:scale-[1.01] active:scale-[0.98]"
         >
           <span className="flex items-center gap-3">
             <Users className="size-6" strokeWidth={2.5} />
-            <span className="text-xl font-black uppercase tracking-tight">Meus Clientes</span>
+            <span className="text-xl font-black uppercase tracking-tight">Clientes</span>
           </span>
           <ArrowRight className="size-5 text-ink/30" />
         </Link>

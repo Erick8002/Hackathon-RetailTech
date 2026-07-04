@@ -23,6 +23,8 @@ type State = {
 
   cart: CartItem[];
   selectedClientId: string | null;
+  // ✅ NOVO: Rastrear se caderneta foi desbloqueada manualmente
+  cadernetaUnlocked: boolean;
 
   // auth
   login: (email: string) => void;
@@ -44,6 +46,9 @@ type State = {
 
   // products
   addProduct: (p: Omit<Product, "id">) => void;
+
+  // ✅ NOVO: Ação para desbloquear/bloquear caderneta manualmente
+  setCadernetaUnlocked: (unlocked: boolean) => void;
 };
 
 const nid = () => Math.random().toString(36).slice(2, 10);
@@ -57,6 +62,7 @@ export const useApp = create<State>((set, get) => ({
   salesCount: 12,
   cart: [],
   selectedClientId: null,
+  cadernetaUnlocked: false,
 
   login: (email) => set({ isAuthed: true, userEmail: email }),
   logout: () => set({ isAuthed: false, userEmail: null }),
@@ -87,7 +93,7 @@ export const useApp = create<State>((set, get) => ({
       }
     }
   },
-  clearCart: () => set({ cart: [], selectedClientId: null }),
+  clearCart: () => set({ cart: [], selectedClientId: null, cadernetaUnlocked: false }),
   cartTotal: () => {
     const products = get().products;
     return get().cart.reduce((sum, item) => {
@@ -96,7 +102,7 @@ export const useApp = create<State>((set, get) => ({
     }, 0);
   },
 
-  selectClient: (id) => set({ selectedClientId: id }),
+  selectClient: (id) => set({ selectedClientId: id, cadernetaUnlocked: false }),
 
   receivePayment: (clientId, amount) => {
     set({
@@ -178,10 +184,13 @@ export const useApp = create<State>((set, get) => ({
         });
       }
     }
-    set({ cart: [], selectedClientId: null });
+    set({ cart: [], selectedClientId: null, cadernetaUnlocked: false });
   },
 
   addProduct: (p) => set({ products: [...get().products, { ...p, id: nid() }] }),
+
+  // ✅ NOVO: Ação para desbloquear/bloquear caderneta
+  setCadernetaUnlocked: (unlocked) => set({ cadernetaUnlocked: unlocked }),
 }));
 
 export const receivableTotal = (clients: Client[]) =>
