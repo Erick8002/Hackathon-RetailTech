@@ -6,12 +6,14 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  redirect,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { useApp } from "@/store/app-store";
 
 function NotFoundComponent() {
   return (
@@ -59,8 +61,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Tentar novamente
           </button>
-          <a href="/" className="rounded-xl border-2 border-ink px-4 py-2 text-sm font-bold">
-            Início
+          <a href="/login" className="rounded-xl border-2 border-ink px-4 py-2 text-sm font-bold">
+            Login
           </a>
         </div>
       </div>
@@ -68,41 +70,54 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
-      { name: "theme-color", content: "#fcfaf7" },
-      { title: "Caderneta Digital" },
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    beforeLoad: () => {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname === "/" &&
+        !useApp.getState().isAuthed
+      ) {
+        throw redirect({ to: "/login" });
+      }
+    },
+    head: () => (
       {
-        name: "description",
-        content:
-          "A caderneta digital inteligente do varejo popular. Controle vendas, estoque e fiado direto do balcão.",
-      },
-      { property: "og:title", content: "AESGPTech — Caderneta Digital do Varejo" },
-      {
-        property: "og:description",
-        content: "Controle de vendas, estoque e fiado para lojistas de mercados populares.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
-});
+        meta: [
+          { charSet: "utf-8" },
+          { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
+          { name: "theme-color", content: "#fcfaf7" },
+          { title: "Caderneta Digital" },
+          {
+            name: "description",
+            content:
+              "A caderneta digital inteligente do varejo popular. Controle vendas, estoque e fiado direto do balcão.",
+          },
+          { property: "og:title", content: "AESGPTech — Caderneta Digital do Varejo" },
+          {
+            property: "og:description",
+            content: "Controle de vendas, estoque e fiado para lojistas de mercados populares.",
+          },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+        links: [
+          { rel: "stylesheet", href: appCss },
+          { rel: "preconnect", href: "https://fonts.googleapis.com" },
+          { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+          {
+            rel: "stylesheet",
+            href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap",
+          },
+        ],
+      }
+    ),
+    shellComponent: RootShell,
+    component: RootComponent,
+    notFoundComponent: NotFoundComponent,
+    errorComponent: ErrorComponent,
+  }
+);
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
