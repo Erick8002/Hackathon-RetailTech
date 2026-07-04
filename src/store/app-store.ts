@@ -11,9 +11,15 @@ import {
 export type CartItem = { productId: string; qty: number };
 export type PaymentMethod = "dinheiro" | "pix" | "cartao" | "caderneta";
 
+type User = {
+  email: string;
+  password: string;
+};
+
 type State = {
   isAuthed: boolean;
   userEmail: string | null;
+  users: User[];
 
   products: Product[];
   clients: Client[];
@@ -23,11 +29,11 @@ type State = {
 
   cart: CartItem[];
   selectedClientId: string | null;
-  // ✅ NOVO: Rastrear se caderneta foi desbloqueada manualmente
   cadernetaUnlocked: boolean;
 
   // auth
-  login: (email: string) => void;
+  login: (email: string, password: string) => { success: boolean; error?: string };
+  register: (email: string, password: string, confirmPassword: string) => { success: boolean; error?: string };
   logout: () => void;
 
   // cart
@@ -47,7 +53,6 @@ type State = {
   // products
   addProduct: (p: Omit<Product, "id">) => void;
 
-  // ✅ NOVO: Ação para desbloquear/bloquear caderneta manualmente
   setCadernetaUnlocked: (unlocked: boolean) => void;
 };
 
@@ -56,6 +61,7 @@ const nid = () => Math.random().toString(36).slice(2, 10);
 export const useApp = create<State>((set, get) => ({
   isAuthed: false,
   userEmail: null,
+  users: [],
   products: seedProducts,
   clients: seedClients,
   cashToday: seedCashToday,
@@ -64,7 +70,42 @@ export const useApp = create<State>((set, get) => ({
   selectedClientId: null,
   cadernetaUnlocked: false,
 
-  login: (email) => set({ isAuthed: true, userEmail: email }),
+  login: (email, password) => {
+    const user = get().users.find((u) => u.email === email);
+    if (!user) {
+      return { success: false, error: "Email não encontrado" };
+    }
+    if (user.password !== password) {
+      return { success: false, error: "Senha incorreta" };
+    }
+    set({ isAuthed: true, userEmail: email });
+    return { success: true };
+  },
+
+  register: (email, password, confirmPassword) => {
+    if (!email.trim()) {
+      return { success: false, error: "Email é obrigatório" };
+    }
+    if (!email.includes("@")) {
+      return { success: false, error: "Email inválido" };
+    }
+    if (password.length < 6) {
+      return { success: false, error: "Senha deve ter no mínimo 6 caracteres" };
+    }
+    if (password !== confirmPassword) {
+      return { success: false, error: "Senhas não correspondem" };
+    }
+    if (get().users.some((u) => u.email === email)) {
+      return { success: false, error: "Email já cadastrado" };
+    }
+    set({
+      users: [...get().users, { email, password }],
+      isAuthed: true,
+      userEmail: email,
+    });
+    return { success: true };
+  },
+
   logout: () => set({ isAuthed: false, userEmail: null }),
 
   addToCart: (productId) => {
