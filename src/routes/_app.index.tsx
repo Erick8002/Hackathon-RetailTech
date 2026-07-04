@@ -86,9 +86,9 @@ function HomePage() {
             <AlertTriangle className="size-6 shrink-0 " strokeWidth={2.5} />
             <div className="min-w-0">
               <p className="font-black uppercase leading-tight">
-                {overdue.length} clientes com pendências atrasadas
+                {overdue.length} clientes com dívida ativa
               </p>
-              <p className="text-xs text-white/80">Toque para ver quem precisa pagar</p>
+              <p className="text-xs text-white/80">Toque para ver detalhes</p>
             </div>
           </div>
           <ArrowRight className="size-5 shrink-0" />

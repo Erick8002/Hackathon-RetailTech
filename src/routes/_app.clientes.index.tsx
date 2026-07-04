@@ -10,10 +10,12 @@ const searchSchema = z.object({
   filtro: z.enum(["devedores"]).optional(),
 });
 
-export const Route = createFileRoute("/_app/clientes/")({
-  validateSearch: (s) => searchSchema.parse(s),
-  component: Clientes,
-});
+export const Route = createFileRoute("/_app/clientes/")(
+  {
+    validateSearch: (s) => searchSchema.parse(s),
+    component: Clientes,
+  }
+);
 
 function Clientes() {
   const { filtro } = Route.useSearch();
@@ -24,6 +26,7 @@ function Clientes() {
   const [showForm, setShowForm] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
+  const [newClientCpf, setNewClientCpf] = useState("");
 
   const filtered = useMemo(() => {
     let list = [...clients].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
@@ -34,10 +37,11 @@ function Clientes() {
   }, [clients, filtro, q]);
 
   const handleAddClient = () => {
-    if (!newClientName.trim()) return;
-    addClient(newClientName.trim(), newClientPhone.trim());
+    if (!newClientName.trim() || !newClientCpf.trim()) return;
+    addClient(newClientName.trim(), newClientPhone.trim(), newClientCpf.trim());
     setNewClientName("");
     setNewClientPhone("");
+    setNewClientCpf("");
     setShowForm(false);
   };
 
@@ -111,6 +115,15 @@ function Clientes() {
           />
 
           <input
+            type="text"
+            value={newClientCpf}
+            onChange={(e) => setNewClientCpf(e.target.value.replace(/\D/g, "").slice(0, 11))}
+            placeholder="CPF (11 dígitos)"
+            className="h-11 w-full rounded-lg border-2 border-ink/10 bg-white px-3 text-sm font-medium outline-none focus:border-ink"
+            inputMode="numeric"
+          />
+
+          <input
             type="tel"
             value={newClientPhone}
             onChange={(e) => setNewClientPhone(e.target.value)}
@@ -120,7 +133,7 @@ function Clientes() {
 
           <button
             onClick={handleAddClient}
-            disabled={!newClientName.trim()}
+            disabled={!newClientName.trim() || !newClientCpf.trim()}
             className="h-11 w-full rounded-lg bg-ledger-green font-bold uppercase text-white disabled:bg-ink/20 disabled:text-ink/40"
           >
             Salvar Cliente

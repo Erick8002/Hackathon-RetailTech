@@ -45,7 +45,7 @@ type State = {
   // clients
   selectClient: (id: string | null) => void;
   receivePayment: (clientId: string, amount: number) => void;
-  addClient: (name: string, phone: string) => void;
+  addClient: (name: string, phone: string, cpf: string) => void;
 
   // sale
   finalizeSale: (method: PaymentMethod) => void;
@@ -167,7 +167,7 @@ export const useApp = create<State>((set, get) => ({
     });
   },
 
-  addClient: (name, phone) =>
+  addClient: (name, phone, cpf) =>
     set({
       clients: [
         ...get().clients,
@@ -175,6 +175,7 @@ export const useApp = create<State>((set, get) => ({
           id: nid(),
           name,
           phone,
+          cpf,
           debt: 0,
           overdueDays: 0,
           purchases: 0,
@@ -238,4 +239,4 @@ export const receivableTotal = (clients: Client[]) =>
   clients.reduce((s, c) => s + c.debt, 0);
 
 export const overdueClients = (clients: Client[]) =>
-  clients.filter((c) => c.overdueDays > 15);
+  clients.filter((c) => c.debt > 0);

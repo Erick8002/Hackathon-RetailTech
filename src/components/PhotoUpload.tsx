@@ -13,6 +13,7 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(photoPreview);
+  const [tempCapture, setTempCapture] = useState<string | undefined>(undefined);
 
   const startCamera = async () => {
     try {
@@ -21,6 +22,9 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {
+          // Fallback se play() falhar
+        });
         setIsCameraActive(true);
       }
     } catch (error) {
@@ -44,11 +48,23 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0);
         const base64 = canvasRef.current.toDataURL("image/jpeg");
-        setPreview(base64);
-        onPhotoCapture(base64);
+        setTempCapture(base64);
         stopCamera();
       }
     }
+  };
+
+  const confirmPhoto = () => {
+    if (tempCapture) {
+      setPreview(tempCapture);
+      onPhotoCapture(tempCapture);
+      setTempCapture(undefined);
+    }
+  };
+
+  const rejectPhoto = () => {
+    setTempCapture(undefined);
+    setIsCameraActive(false);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +112,39 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
     );
   }
 
+  if (tempCapture) {
+    return (
+      <div className="space-y-3">
+        <div className="relative h-40 w-full overflow-hidden rounded-2xl border-2 border-ledger-yellow bg-gray-100">
+          <img
+            src={tempCapture}
+            alt="Preview da foto"
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <p className="text-center font-mono text-sm font-bold text-ledger-yellow">
+          A foto está nítida e boa para ser anexada?
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={confirmPhoto}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ledger-green py-2 font-bold text-white"
+          >
+            ✓ Sim, confirmar
+          </button>
+          <button
+            type="button"
+            onClick={rejectPhoto}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-ledger-red bg-white py-2 font-bold text-ledger-red"
+          >
+            ✕ Tirar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
       {isCameraActive ? (
@@ -104,6 +153,7 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
             ref={videoRef}
             autoPlay
             playsInline
+            muted
             className="h-40 w-full rounded-lg bg-black object-cover"
           />
           <canvas ref={canvasRef} className="hidden" />
@@ -122,7 +172,7 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
               className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-ink/20 bg-white py-2 font-bold"
             >
               <X className="size-5" />
-              Cancelar
+              Fechar
             </button>
           </div>
         </div>

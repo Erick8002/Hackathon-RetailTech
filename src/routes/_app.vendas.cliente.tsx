@@ -40,6 +40,7 @@ function VendaCliente() {
   const [showForm, setShowForm] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
+  const [newClientCpf, setNewClientCpf] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -53,10 +54,11 @@ function VendaCliente() {
   const goPayment = () => navigate({ to: "/vendas/pagamento" });
 
   const handleAddClient = () => {
-    if (!newClientName.trim()) return;
-    addClient(newClientName.trim(), newClientPhone.trim());
+    if (!newClientName.trim() || !newClientCpf.trim()) return;
+    addClient(newClientName.trim(), newClientPhone.trim(), newClientCpf.trim());
     setNewClientName("");
     setNewClientPhone("");
+    setNewClientCpf("");
     setShowForm(false);
   };
 
@@ -150,6 +152,15 @@ function VendaCliente() {
               />
 
               <input
+                type="text"
+                value={newClientCpf}
+                onChange={(e) => setNewClientCpf(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                placeholder="CPF (11 dígitos)"
+                className="h-11 w-full rounded-lg border-2 border-ink/10 bg-white px-3 text-sm font-medium outline-none focus:border-ink"
+                inputMode="numeric"
+              />
+
+              <input
                 type="tel"
                 value={newClientPhone}
                 onChange={(e) => setNewClientPhone(e.target.value)}
@@ -159,7 +170,7 @@ function VendaCliente() {
 
               <button
                 onClick={handleAddClient}
-                disabled={!newClientName.trim()}
+                disabled={!newClientName.trim() || !newClientCpf.trim()}
                 className="h-11 w-full rounded-lg bg-ledger-green font-bold uppercase text-white disabled:bg-ink/20 disabled:text-ink/40"
               >
                 Salvar Cliente

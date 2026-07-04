@@ -17,7 +17,8 @@ export type LedgerEntry = {
 export type Client = {
   id: string;
   name: string;
-  phone: string; // digits with country code, e.g. 5511987654321
+  phone: string;
+  cpf: string;
   purchases: number;
   debt: number;
   overdueDays: number;
@@ -43,6 +44,7 @@ export const seedClients: Client[] = [
     id: "c1",
     name: "Dona Maria da Silva",
     phone: "5511987650001",
+    cpf: "12345678901",
     purchases: 24,
     debt: 120,
     overdueDays: 32,
@@ -56,6 +58,7 @@ export const seedClients: Client[] = [
     id: "c2",
     name: "Seu Manoel Pereira",
     phone: "5511987650002",
+    cpf: "98765432109",
     purchases: 14,
     debt: 0,
     overdueDays: 0,
@@ -68,6 +71,7 @@ export const seedClients: Client[] = [
     id: "c3",
     name: "Sebastião Oliveira",
     phone: "5511987650003",
+    cpf: "55544433322",
     purchases: 18,
     debt: 180,
     overdueDays: 45,
@@ -80,6 +84,7 @@ export const seedClients: Client[] = [
     id: "c4",
     name: "Tiago Souza",
     phone: "5511987650004",
+    cpf: "11122233344",
     purchases: 2,
     debt: 0,
     overdueDays: 0,
@@ -89,6 +94,7 @@ export const seedClients: Client[] = [
     id: "c5",
     name: "Ana Beatriz Lima",
     phone: "5511987650005",
+    cpf: "99988877766",
     purchases: 9,
     debt: 45,
     overdueDays: 40,
@@ -98,6 +104,7 @@ export const seedClients: Client[] = [
     id: "c6",
     name: "Carlos Eduardo",
     phone: "5511987650006",
+    cpf: "44455566677",
     purchases: 7,
     debt: 0,
     overdueDays: 0,
@@ -107,6 +114,7 @@ export const seedClients: Client[] = [
     id: "c7",
     name: "Juliana Ferreira",
     phone: "5511987650007",
+    cpf: "77788899900",
     purchases: 3,
     debt: 0,
     overdueDays: 0,
