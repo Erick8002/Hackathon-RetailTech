@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Camera } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ledger/PageHeader";
+import { PhotoUpload } from "@/components/PhotoUpload";
 import { useApp } from "@/store/app-store";
 
 const EMOJIS = ["📦", "🍞", "🥫", "🧃", "🧂", "🍫", "🧻", "🍿", "🥛", "🍺"];
@@ -17,7 +17,11 @@ function NovoProduto() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [qty, setQty] = useState("");
-  const [photoTaken, setPhotoTaken] = useState(false);
+  const [photo, setPhoto] = useState<string>("");
+
+  const handlePhotoCapture = (base64: string) => {
+    setPhoto(base64);
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -32,6 +36,7 @@ function NovoProduto() {
       price: parsedPrice,
       qty: parsedQty,
       emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+      photo: photo || undefined,
     });
     toast.success(`${name.trim()} cadastrado no estoque.`);
     navigate({ to: "/estoque" });
@@ -42,21 +47,11 @@ function NovoProduto() {
       <PageHeader title="Novo Produto" subtitle="Cadastro rápido" back="/estoque" />
 
       <form onSubmit={submit} className="animate-entry space-y-4">
-        <button
-          type="button"
-          onClick={() => {
-            setPhotoTaken(true);
-            toast("Câmera simulada — foto capturada.");
-          }}
-          className={`flex h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl border-4 border-dashed ${
-            photoTaken ? "border-ledger-green bg-ledger-green/5" : "border-ink/20 bg-white"
-          }`}
-        >
-          <Camera className="size-8" strokeWidth={2} />
-          <span className="font-black uppercase tracking-tight">
-            {photoTaken ? "✓ Foto capturada" : "Tirar Foto"}
-          </span>
-        </button>
+        <PhotoUpload 
+          onPhotoCapture={handlePhotoCapture}
+          hasPhoto={!!photo}
+          photoPreview={photo}
+        />
 
         <label className="block">
           <span className="mb-1.5 block font-mono text-[11px] font-bold uppercase tracking-widest text-ink/60">

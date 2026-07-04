@@ -47,8 +47,16 @@ function NovaVenda() {
               key={p.id}
               className="flex gap-3 rounded-xl border-2 border-ink/10 bg-white p-3"
             >
-              <div className="grid size-16 shrink-0 place-items-center rounded-lg border border-ink/5 bg-paper text-3xl">
-                {p.emoji}
+              <div className="grid size-16 shrink-0 place-items-center rounded-lg border border-ink/5 bg-paper overflow-hidden">
+                {p.photo ? (
+                  <img
+                    src={p.photo}
+                    alt={p.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl">{p.emoji}</span>
+                )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col justify-between">
                 <div className="min-w-0">

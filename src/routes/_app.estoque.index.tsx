@@ -29,8 +29,18 @@ function Estoque() {
               key={p.id}
               className="flex items-center gap-3 rounded-xl border-2 border-ink/10 bg-white p-3"
             >
-              <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-paper text-2xl">
-                {p.emoji}
+              <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-paper">
+                {p.photo ? (
+                  <img
+                    src={p.photo}
+                    alt={p.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-2xl">
+                    {p.emoji}
+                  </div>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{p.name}</p>

@@ -4,6 +4,7 @@ export type Product = {
   price: number;
   qty: number;
   emoji: string;
+  photo?: string; // base64 encoded image
 };
 
 export type LedgerEntry = {
