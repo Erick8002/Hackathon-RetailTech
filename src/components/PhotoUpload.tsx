@@ -7,7 +7,7 @@ interface PhotoUploadProps {
   photoPreview?: string;
 }
 
-export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUploadProps) {
+export function PhotoUpload({ onPhotoCapture, photoPreview }: PhotoUploadProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -22,9 +22,7 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {
-          // Fallback se play() falhar
-        });
+        videoRef.current.play().catch(() => {});
         setIsCameraActive(true);
       }
     } catch (error) {
@@ -62,9 +60,9 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
     }
   };
 
-  const rejectPhoto = () => {
+  const retakePhoto = () => {
     setTempCapture(undefined);
-    setIsCameraActive(false);
+    startCamera();
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,9 +103,6 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
             <X className="size-4" />
           </button>
         </div>
-        <p className="text-center font-mono text-sm font-bold text-ledger-green">
-          ✓ Foto capturada
-        </p>
       </div>
     );
   }
@@ -123,7 +118,7 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
           />
         </div>
         <p className="text-center font-mono text-sm font-bold text-ledger-yellow">
-          A foto está nítida e boa para ser anexada?
+          Quer confirmar esta foto?
         </p>
         <div className="flex gap-2">
           <button
@@ -135,7 +130,7 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
           </button>
           <button
             type="button"
-            onClick={rejectPhoto}
+            onClick={retakePhoto}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-ledger-red bg-white py-2 font-bold text-ledger-red"
           >
             ✕ Tirar novamente
@@ -145,67 +140,65 @@ export function PhotoUpload({ onPhotoCapture, hasPhoto, photoPreview }: PhotoUpl
     );
   }
 
-  return (
-    <div className="space-y-2">
-      {isCameraActive ? (
-        <div className="space-y-2 rounded-2xl border-4 border-dashed border-ledger-blue bg-ledger-blue/5 p-4">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="h-40 w-full rounded-lg bg-black object-cover"
-          />
-          <canvas ref={canvasRef} className="hidden" />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={capturePhoto}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ledger-green py-2 font-bold text-white"
-            >
-              <Camera className="size-5" />
-              Capturar Foto
-            </button>
-            <button
-              type="button"
-              onClick={stopCamera}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-ink/20 bg-white py-2 font-bold"
-            >
-              <X className="size-5" />
-              Fechar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
+  if (isCameraActive) {
+    return (
+      <div className="space-y-2 rounded-2xl border-4 border-dashed border-ledger-blue bg-ledger-blue/5 p-4">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="h-40 w-full rounded-lg bg-black object-cover"
+        />
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="flex gap-2">
           <button
             type="button"
-            onClick={startCamera}
-            className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl border-4 border-dashed border-ink/20 bg-white hover:border-ledger-blue hover:bg-ledger-blue/5 transition-colors"
+            onClick={capturePhoto}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ledger-green py-2 font-bold text-white"
           >
-            <Camera className="size-8" strokeWidth={2} />
-            <span className="font-black uppercase tracking-tight">Tirar Foto</span>
+            <Camera className="size-5" />
+            Capturar Foto
           </button>
-
-          <div className="relative">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-ink/10 bg-white font-bold uppercase hover:bg-ink/5 transition-colors"
-            >
-              <Upload className="size-5" />
-              Upload PNG/JPG
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={stopCamera}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-ink/20 bg-white py-2 font-bold"
+          >
+            <X className="size-5" />
+            Fechar
+          </button>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={startCamera}
+        className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl border-4 border-dashed border-ink/20 bg-white hover:border-ledger-blue hover:bg-ledger-blue/5 transition-colors"
+      >
+        <Camera className="size-8" strokeWidth={2} />
+        <span className="font-black uppercase tracking-tight">Tirar Foto</span>
+      </button>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-ink/10 bg-white font-bold uppercase hover:bg-ink/5 transition-colors"
+      >
+        <Upload className="size-5" />
+        Upload PNG/JPG
+      </button>
     </div>
   );
 }
